@@ -1,8 +1,5 @@
 package ru.geekbrains;
 
-import java.lang.reflect.Array;
-import java.lang.runtime.ObjectMethods;
-import java.text.DecimalFormat;
 import java.util.*;
 
 public class LessonMain {
