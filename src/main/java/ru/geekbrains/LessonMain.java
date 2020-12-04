@@ -1,90 +1,89 @@
 package ru.geekbrains;
 
-import org.apache.commons.lang3.math.NumberUtils;
-
+import java.lang.reflect.Array;
+import java.lang.runtime.ObjectMethods;
+import java.text.DecimalFormat;
 import java.util.*;
 
 public class LessonMain {
-    public static final Scanner scanner = new Scanner(System.in);
-    public static Random random = new Random();
 
-    public static void print(String text) {
-        System.out.println(text);
-        System.out.print(System.lineSeparator());
-    }
-
-    public static void main(String[] args) throws MyArraySizeException, MyArrayDataException { // начало main
-        print("Help, it alive! Press Enter for start default." + "\r\n" + "Введите размер массива отличный от 4 или 0 для выхода");
-        int input_answer = Math.abs(NumberUtils.toInt((scanner.nextLine()), 4));
-
-        if (!(input_answer == 0)) {
-            String[][] array = new String[input_answer][input_answer];
-            if (input_answer == 4) {
-                for (int i = 0; i < array.length; i++) {
-                    for (int j = 0; j < array[i].length; j++) {
-                        array[i][j] = String.valueOf(i + j);
-                        System.out.print(array[i][j] + " ");
-                        // Вывод значений массива в одну строку с пробелом
-                    }
-                    System.out.print("\r\n"); // Переход на новую строку для мультиплатформенных приложений WIn/bsd/HTML
-                }
-                System.out.print("\r\n");
-
-                System.out.println("Правильный массив");
-                changeToIntAndSum(array);
-
-                System.out.println("\n Не правильный массив (not a numbers)");
-                array[random.nextInt(input_answer)][random.nextInt(input_answer)] = "Seven";
-                try {
-                    changeToIntAndSum(array);
-                } catch (MyArrayDataException e) {
-                   // e.printStackTrace();
-                    print("please move forward");
-                    System.exit(-1);
-                }
-            } else
-                System.out.println("Не правильный массив (error of correct size)");
-            try {
-                changeToIntAndSum(array);
-            } catch (MyArraySizeException e) {
-                //e.printStackTrace();
-                print("please move forward");
+    public static void main(String[] args) { // начало main
+        System.out.println("1");
+//        Задание 1
+        String[] array = {"ache", "slow", "torn", "slum", "boom", "rival", "wrong",
+                "cholera", "revenge", "arrogant", "papa", "book", "home", "ache", "cars",
+                "jolly", "sugar", "friend", "book", "mother", "father", "bloomiest", "ache"};
+        //уникальные и отсортированные элементы элементы
+        Set<String> arrayUnique = new TreeSet<>(Arrays.asList(array));
+        System.out.println(arrayUnique);
+        //подсчитать сколько раз встречаются элементы
+        Map<String, Integer> wordInArrayRepeat = new HashMap<>();
+        for (String word : array) {
+            if (wordInArrayRepeat.containsKey(word)) {
+                wordInArrayRepeat.put(word, wordInArrayRepeat.get(word) + 1);
+            } else {
+                wordInArrayRepeat.put(word, 1);
             }
         }
-        print("Прощай - хорошего дня!");
+        // сортировать по comparingByKey() or comparingByValue() и распечатать
+        wordInArrayRepeat.entrySet()
+                .stream()
+                .sorted(Map.Entry.comparingByKey())
+                .forEach(System.out::println);
+
+        System.out.println("2");
+//        Задание 2
+        PhoneDirectory PhoneDirectory = new PhoneDirectory();
+        Random random = new Random();
+        for (String txt : array) {
+            String name = txt.substring(0, 1).toUpperCase() + txt.substring(1) + "tix";
+            String randomNumber = "+780" + (100000000 + random.nextInt(899999999));
+
+            PhoneDirectory.add(name, randomNumber);
+        }
+
+        PhoneDirectory.Print();
+
+        try {
+            System.out.println(PhoneDirectory.get("Lee"));
+            System.out.println(PhoneDirectory.get("Booktix"));
+            System.out.println(PhoneDirectory.get("Rivaltix"));
+        } catch (Exception e) {
+            System.out.println("Please move forward");
+            System.exit(-1);
+        }
     } //конец main
-
-    private static void changeToIntAndSum(String[][] array) throws MyArraySizeException, MyArrayDataException {
-        int Sum = 0;
-        for (int i = 0; i < array.length; i++) {
-            for (int j = 0; j < array[i].length; j++) {
-                if (array.length != 4 && array[i].length != 4) {
-                    print(("Размер массива != [4][4]. Выбранный массив: [" + array.length + "][" + array[i].length + "]."));
-                    //System.exit(4);
-                    throw new MyArraySizeException("Размер массива != [4][4]. Выбранный массив: [" + array.length + "][" + array[i].length + "].");
-                }
-                try {
-                    Integer.parseInt(array[i][j]);
-                } catch (NumberFormatException e) {
-                    print("На вертикале " + i + ", и горизонтали " + j + " не число, а - " + array[i][j] + "\n");
-                   // System.exit(5);
-                    throw new MyArrayDataException("На вертикале " + i + ", и горизонтали " + j + " не число " + array[i][j] + "\n");
-                }
-                Sum += Integer.parseInt(array[j][j]);
-            }
-        }
-        System.out.println("Сумма = " + Sum);
-    }
 } //конец LessonMain
 
-class MyArraySizeException extends Exception {
-    public MyArraySizeException(String message) {
-        super(message);
-    }
-}
+class PhoneDirectory {
+    private final Map<String, ArrayList<String>> phoneBook = new TreeMap<>();
 
-class MyArrayDataException extends NumberFormatException {
-    public MyArrayDataException(String s) {
-        super(s);
+    public void add(String F, String phoneNumber) {
+        ArrayList<String> NumberList = new ArrayList<>();
+        if (phoneBook.containsKey(F)) {
+            NumberList = phoneBook.get(F);
+            NumberList.add(phoneNumber);
+            System.out.println("Для " + F + " добавлен номер: " + phoneNumber);
+        } else {
+            NumberList.add(phoneNumber);
+            phoneBook.put(F, NumberList);
+            System.out.println("Добавлен " + F + ": " + phoneNumber);
+        }
+    }
+
+    public String get(String F) {
+        String value = String.valueOf(phoneBook.get(F));
+        if ((phoneBook.containsKey(F)) && (value != null)) {
+            return "Для " + F + " записаны номера: " + phoneBook.get(F);
+        } else {
+            return "Для " + F + " не записаны номера";
+        }
+    }
+
+    public void Print() { //печать справочника
+        phoneBook.entrySet()
+                .stream()
+                .sorted(Map.Entry.comparingByKey())
+                .forEach(System.out::println);
     }
 }
