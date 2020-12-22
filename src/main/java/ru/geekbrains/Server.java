@@ -1,80 +1,101 @@
 package ru.geekbrains;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Scanner;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-public class Server {
-    static int port = 18002;
-    static AtomicInteger clientCount = new AtomicInteger(0);
+class Server {
 
-    public static void main(String[] args) {
+    protected final int Port = 23154;
+    List<ClientHandler> clients = new ArrayList<>();
+    Map<String, List<Message>> chats = new HashMap<>();
 
+    Server() {
         try {
-            // Создаём сервер
-            ServerSocket serverSocket = new ServerSocket(port);
+            ServerSocket serverSocket = new ServerSocket(Port);
+            AuthService authService = new AuthService();
             System.out.println("Server is working...");
             System.out.println("Wait for messages...");
-            // Ждём клиентов
+            // Обработчик клиентов
             while (true) {
                 Socket socket = serverSocket.accept();
                 System.out.println("New Client");
-                new ClientHandler(socket).start();
+                new Thread(() -> {
+                    new ClientHandler(authService, this, socket);
+                }).start();
             }
         } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("Can't open port " + port);
+            System.out.println("Can't open port " + Port);
             System.exit(1);
         }
     }
-}
 
-class ClientHandler extends Thread {
-    Socket socket;
+    synchronized void onNewMessage(Client sender, String text) {
+        //вносим сообщения в базу
+        String key = "All";
+        if (!chats.containsKey(key)) {
+            chats.put(key, new ArrayList<>());
+        }
+        chats.get(key).add(new Message(sender, text));
 
-    ClientHandler(Socket socket) {
-        this.socket = socket;
-    }
-
-    @Override
-    public void run() {
-        try {
-            // входящий поток
-            Scanner in = new Scanner(socket.getInputStream());
-            // исходящий поток
-            PrintWriter out = new PrintWriter(socket.getOutputStream(), true); //или пишем внизу метод
-            // с консоли
-            Scanner sc = new Scanner(System.in);
-
-// отправляем в этом потоке сообщение от сервера
-            new Thread(() -> {
-                while (true) {
-                    System.out.println("Server, write you message");
-                    String msg = sc.nextLine();
-                    System.out.println("The message was send");
-                    out.println(msg);
-                }
-            }).start();
-            // в главном потоке получаем сообщение и шлем эхо
-            while (true) {
-                String msg = in.nextLine();
-                if (msg.equals("/end")) break;
-                System.out.println("Client: " + msg);
-                //               out.flush(); // это автоматический/принудительный сброс буфера вывода
-            }
-        } catch (
-                IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                socket.close(); // закрываем розетку клиента
-            } catch (IOException e) {
-                e.printStackTrace();
+        // Рассылаем сообщения всем
+        for (ClientHandler recipient : clients) {
+            //исключаем отправителя
+            if (!recipient.client.login.equals(sender.login)) {
+                recipient.sendMessage(sender, text);
+                System.out.println("Отправлено сообщение от " + sender);
             }
         }
     }
-}
 
+    synchronized void sendPrivateMessage(Client sender, String recipientNickname, String text) {
+        String key;
+        if (sender.name.compareTo(recipientNickname) > 0) {
+            key = sender.name + " " + recipientNickname;
+        } else {
+            key = recipientNickname + " " + sender.name;
+        }
+        if (!chats.containsKey(key)) {
+            chats.put(key, new ArrayList<>());
+        } else {
+            chats.get(key).add(new Message(sender, text));
+        }
+        ClientHandler recipient = null;
+        for (ClientHandler client : clients) {
+            if (client.client.name.equalsIgnoreCase(recipientNickname)) {
+                recipient = client;
+            }
+        }
+        if (recipient != null) {
+            recipient.sendMessage(sender, text);
+            System.out.println("Отправлено сообщение для " + recipientNickname);
+        } else {
+            System.out.println("Получатель не найден " + recipientNickname);
+            //добавить проверку что никнейм получателя существует через get из списка клиентов
+        }
+
+    }
+
+
+    synchronized void onNewClient(ClientHandler clientHandler) {
+        clients.add(clientHandler);
+        for (int i = 0; i < chats.size(); i++) {
+            // Message message = chats.get(i);
+            // clientHandler.sendMessage(message.client, message.text);
+        }
+        onNewMessage(clientHandler.client, "Вошел в чат");
+    }
+
+    synchronized void onClientDisconnected(ClientHandler clientHandler) {
+        clients.remove(clientHandler);
+        onNewMessage(clientHandler.client, "Покинул чат");
+    }
+
+    public static void main(String[] args) {
+        new Server();
+    }
+}
