@@ -1,4 +1,5 @@
 package ru.geekbrains;
+
 public class Message {
     Client client;
     String text;

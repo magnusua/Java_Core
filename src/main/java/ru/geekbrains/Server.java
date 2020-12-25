@@ -9,90 +9,81 @@ import java.util.List;
 import java.util.Map;
 
 class Server {
-
-    protected final int Port = 23154;
+    static final int PORT = 12635;
     List<ClientHandler> clients = new ArrayList<>();
     Map<String, List<Message>> chats = new HashMap<>();
 
     Server() {
         try {
-            ServerSocket serverSocket = new ServerSocket(Port);
+            ServerSocket serverSocket = new ServerSocket(PORT);
             AuthService authService = new AuthService();
             System.out.println("Server is working...");
             System.out.println("Wait for messages...");
             // Обработчик клиентов
             while (true) {
-                Socket socket = serverSocket.accept();
-                System.out.println("New Client");
-                new Thread(() -> {
-                    new ClientHandler(authService, this, socket);
-                }).start();
+                try {
+                    Socket socket = serverSocket.accept();
+                    new Thread(() -> {
+                        new ClientHandler(authService, this, socket);
+                    }).start();
+                } catch (Exception e){
+                    System.out.println("Сервер прекратил работу с клиентом");
+                }
             }
         } catch (IOException e) {
-            System.out.println("Can't open port " + Port);
-            System.exit(1);
+            System.out.println("Сервер прекратил работу с ошибкой");
         }
     }
 
-    synchronized void onNewMessage(Client sender, String text) {
-        //вносим сообщения в базу
-        String key = "All";
-        if (!chats.containsKey(key)) {
-            chats.put(key, new ArrayList<>());
-        }
-        chats.get(key).add(new Message(sender, text));
-
-        // Рассылаем сообщения всем
-        for (ClientHandler recipient : clients) {
-            //исключаем отправителя
-            if (!recipient.client.login.equals(sender.login)) {
-                recipient.sendMessage(sender, text);
-                System.out.println("Отправлено сообщение от " + sender);
-            }
+    synchronized void sendBroadCastMessage(Client sender, String text) {
+        for (int i = 0; i < clients.size(); i++) {
+            String recipientLogin = clients.get(i).client.login;
+            sendMessageTo(sender, recipientLogin, text);
         }
     }
 
-    synchronized void sendPrivateMessage(Client sender, String recipientNickname, String text) {
+    synchronized void sendMessageTo(Client sender, String recipientLogin, String text) {
+        // Получаем лон получателя для поиска
+        String senderLogin = sender.login;
+        // Генерируем ключь чата
         String key;
-        if (sender.name.compareTo(recipientNickname) > 0) {
-            key = sender.name + " " + recipientNickname;
+        if (senderLogin.compareTo(recipientLogin) > 0) {
+            key = senderLogin + recipientLogin;
         } else {
-            key = recipientNickname + " " + sender.name;
+            key = recipientLogin + senderLogin;
         }
+        // Проверяем создан ли чат и если нет то создаём
         if (!chats.containsKey(key)) {
-            chats.put(key, new ArrayList<>());
-        } else {
-            chats.get(key).add(new Message(sender, text));
+            // Создаём список сообщений для чата
+            chats.put(key, new ArrayList());
         }
+        // Сохраняем сообщение в чат
+        chats.get(key).add(new Message(sender, text));
+        // Ищем получателя среди клиентов
         ClientHandler recipient = null;
-        for (ClientHandler client : clients) {
-            if (client.client.name.equalsIgnoreCase(recipientNickname)) {
+        for (int i = 0; i < clients.size(); i++) {
+            ClientHandler client = clients.get(i);
+            if (client.client.login.equals(recipientLogin)) {
                 recipient = client;
             }
         }
+        // Если получатель онлайн то отправляем ему сообщение
         if (recipient != null) {
             recipient.sendMessage(sender, text);
-            System.out.println("Отправлено сообщение для " + recipientNickname);
+            System.out.println("Отправлено сообщение для " + recipientLogin);
         } else {
-            System.out.println("Получатель не найден " + recipientNickname);
-            //добавить проверку что никнейм получателя существует через get из списка клиентов
+            System.out.println("Получатель не найден " + recipientLogin);
         }
-
     }
-
 
     synchronized void onNewClient(ClientHandler clientHandler) {
         clients.add(clientHandler);
-        for (int i = 0; i < chats.size(); i++) {
-            // Message message = chats.get(i);
-            // clientHandler.sendMessage(message.client, message.text);
-        }
-        onNewMessage(clientHandler.client, "Вошел в чат");
+        sendBroadCastMessage(clientHandler.client, "Вошел в чат");
     }
 
     synchronized void onClientDisconnected(ClientHandler clientHandler) {
         clients.remove(clientHandler);
-        onNewMessage(clientHandler.client, "Покинул чат");
+        sendBroadCastMessage(clientHandler.client, "Покинул чат");
     }
 
     public static void main(String[] args) {
