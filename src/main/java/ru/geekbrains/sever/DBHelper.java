@@ -1,24 +1,35 @@
-package ru.geekbrains;
+package ru.geekbrains.sever;
 
 import java.sql.*;
 
-public class SQLService {
+public class DBHelper implements AutoCloseable {
+    private static DBHelper instance;
     private static Connection connection;
+
     private static PreparedStatement psGetNick;
     private static PreparedStatement psReg;
     private static PreparedStatement psChangeNick;
 
     private static final String urlConnectionDatabase = "jdbc:sqlite:Users.db";
 
-    public static boolean connect() {
+    private DBHelper() { //синглетон
+    }
+
+    public static DBHelper getInstance(){
+        if(instance == null) {
+            loadDriverAndOpenConnection();
+            instance = new DBHelper();
+        }
+        return instance;
+    }
+
+    public static void loadDriverAndOpenConnection() {
         try {
             Class.forName("org.sqlite.JDBC");
             connection = DriverManager.getConnection(urlConnectionDatabase);
             prepareAllStatements();
-            return true;
         } catch (SQLException | ClassNotFoundException e) {
-            e.printStackTrace();
-            return false;
+            System.err.println("Ошибка открытия базы данных");
         }
     }
 
@@ -82,5 +93,10 @@ public class SQLService {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void close() throws Exception {
+
     }
 }
