@@ -1,4 +1,4 @@
-package ru.geekbrains.sever;
+package ru.geekbrains.server;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -8,7 +8,7 @@ import java.util.Vector;
 public class Server {
     private Vector<ClientHandler> clients;
     private AuthService authService;
-    private int Socket = 64646;
+    private final int ServerPortSocket = 64646;
 
     public AuthService getAuthService() {
         return authService;
@@ -17,11 +17,11 @@ public class Server {
     public Server() {
         clients = new Vector<>();
         authService = new SimpleAuthService();
-        try (ServerSocket serverSocket = new ServerSocket(Socket)) {
-            System.out.println("Сервер запущен на порту 8189");
+        try (ServerSocket serverSocket = new ServerSocket(ServerPortSocket)) {
+            System.out.println("Сервер запущен на порту "+ServerPortSocket);
             while (true) {
                 Socket socket = serverSocket.accept();
-                new ClientHandler(this, socket);
+                new ClientHandler(this, socket, authService);
                 System.out.println("Подключился новый клиент");
             }
         } catch (IOException e) {

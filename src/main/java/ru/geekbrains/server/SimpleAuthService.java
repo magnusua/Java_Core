@@ -1,4 +1,4 @@
-package ru.geekbrains.sever;
+package ru.geekbrains.server;
 
 
 public class SimpleAuthService implements AuthService {
