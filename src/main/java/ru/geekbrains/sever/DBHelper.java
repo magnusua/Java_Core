@@ -51,6 +51,7 @@ public class DBHelper implements AutoCloseable {
             resultSet.close();
         } catch (SQLException e) {
             e.printStackTrace();
+            System.err.println("Ошибка получения пользователя из базы данных");
         }
         return nickName;
     }
@@ -64,6 +65,7 @@ public class DBHelper implements AutoCloseable {
             return true;
         } catch (SQLException e) {
             e.printStackTrace();
+            System.err.println("Ошибка записи нового пользователя в базу данных");
             return false;
         }
     }
@@ -96,7 +98,12 @@ public class DBHelper implements AutoCloseable {
     }
 
     @Override
-    public void close() throws Exception {
-
+    public void close() {
+    try {
+        connection.close();
+    } catch (SQLException e) {
+        e.printStackTrace();
+        System.err.println("Ошибка отключения от базы данных");
+    }
     }
 }
