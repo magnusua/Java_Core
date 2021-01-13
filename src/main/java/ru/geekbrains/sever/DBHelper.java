@@ -15,8 +15,8 @@ public class DBHelper implements AutoCloseable {
     private DBHelper() { //синглетон
     }
 
-    public static DBHelper getInstance(){
-        if(instance == null) {
+    public static DBHelper getInstance() {
+        if (instance == null) {
             loadDriverAndOpenConnection();
             instance = new DBHelper();
         }
@@ -70,7 +70,7 @@ public class DBHelper implements AutoCloseable {
         }
     }
 
-    public static boolean changeNick(String login, String newNickName) {
+    public static boolean changeNickName(String login, String newNickName) {
         try {
             psChangeNick.setString(1, newNickName);
             psChangeNick.setString(2, login);
@@ -82,28 +82,16 @@ public class DBHelper implements AutoCloseable {
         }
     }
 
-    public static void disconnect() {
+    @Override
+    public void close() {
         try {
             psReg.close();
             psGetNick.close();
             psChangeNick.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        try {
             connection.close();
         } catch (SQLException e) {
             e.printStackTrace();
+            System.err.println("Ошибка отключения от базы данных");
         }
-    }
-
-    @Override
-    public void close() {
-    try {
-        connection.close();
-    } catch (SQLException e) {
-        e.printStackTrace();
-        System.err.println("Ошибка отключения от базы данных");
-    }
     }
 }
