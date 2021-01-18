@@ -22,7 +22,6 @@ public class ClientHandler {
         return nickname;
     }
 
-
     public ClientHandler(Server server, Socket socket, AuthService authService) {
         try {
             this.server = server;
@@ -58,7 +57,7 @@ public class ClientHandler {
                     login = tokens[1];
                     server.subscribe(this);
                     break;
-                } // Добавить
+                } // Добавить проверки парпрпа
             }
         }
     }
