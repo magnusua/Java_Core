@@ -5,6 +5,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
+
 import java.net.URL;
 import java.util.ResourceBundle;
 
@@ -26,6 +27,7 @@ public class Controller implements Initializable {
 
     private boolean authenticated;
     private String nickname;
+    private String login;
 
     public void setAuthenticated(boolean authenticated) {
         this.authenticated = authenticated;
@@ -37,6 +39,10 @@ public class Controller implements Initializable {
         clientsList.setManaged(authenticated);
         if (!authenticated) {
             nickname = "";
+            login = "";
+        } else {
+            String history = HistoryManager.getLinesOfHistory(login);
+            textArea.appendText(history);
         }
     }
 
@@ -55,6 +61,7 @@ public class Controller implements Initializable {
     }
 
     public void sendAuth() {
+        login = loginField.getText();
         Network.sendAuth(loginField.getText(), passField.getText());
         loginField.clear();
         passField.clear();
@@ -91,13 +98,14 @@ public class Controller implements Initializable {
                     String[] tokens = msg.split("\\s");
                     Platform.runLater(() -> {
                         clientsList.getItems().clear();
-                        for (int i = 1; i < tokens.length; i++) {
+                        for (int i = 1; i < tokens.length; i++){
                             clientsList.getItems().add(tokens[i]);
                         }
                     });
                 }
             } else {
-                textArea.appendText(msg + "\n");
+                textArea.appendText(msg + System.lineSeparator());
+                HistoryManager.saveHistory(login, msg);
             }
         });
     }
