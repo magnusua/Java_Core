@@ -4,6 +4,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.concurrent.ExecutorService;
 
 public class ClientHandler {
     private String nickname;
@@ -22,24 +23,23 @@ public class ClientHandler {
         return nickname;
     }
 
-    public ClientHandler(Server server, Socket socket, AuthService authService) {
+    public ClientHandler(Server server, Socket socket, AuthService authService, ExecutorService executorService) {
         try {
             this.server = server;
             this.socket = socket;
             this.in = new DataInputStream(socket.getInputStream());
             this.out = new DataOutputStream(socket.getOutputStream());
 
-            new Thread(() -> {
+            executorService.submit(() -> {
                 try {
                     waitAuthorization(server);
                     waitMessageOrCommand(server, authService);
-
                 } catch (IOException e) {
                     e.printStackTrace();
                 } finally {
                     ClientHandler.this.disconnect();
                 }
-            }).start();
+            });
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -89,7 +89,7 @@ public class ClientHandler {
         }
     }
 
-    private void checkUpdateNickNameCommand(Server server, AuthService authService, String msg){
+    private void checkUpdateNickNameCommand(Server server, AuthService authService, String msg) {
         if (msg.startsWith("/upnick ")) {
             String[] tokens = msg.split("\\s", 2);
             if (tokens.length == 2 && !tokens[1].trim().equals("")) {
@@ -103,6 +103,7 @@ public class ClientHandler {
             server.privateMsg(this, tokens[1], tokens[2]);
         }
     }
+
 
     public void disconnect() {
         server.unsubscribe(this);
