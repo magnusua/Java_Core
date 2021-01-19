@@ -9,7 +9,7 @@ public class Lesson4Main {
 
         new Thread(() -> {
             try {
-                Print('C', 'A');
+                xyPrint('C', 'A');
             } catch (InterruptedException ignored) {
                 System.exit(-1);
             }
@@ -17,7 +17,7 @@ public class Lesson4Main {
 
         new Thread(() -> {
             try {
-                Print('A', 'B');
+                xyPrint('A', 'B');
             } catch (InterruptedException ignored) {
                 System.exit(-2);
             }
@@ -25,7 +25,7 @@ public class Lesson4Main {
 
         new Thread(() -> {
             try {
-                Print('B', 'C');
+                xyPrint('B', 'C');
             } catch (InterruptedException ignored) {
                 System.exit(-3);
             }
@@ -33,7 +33,7 @@ public class Lesson4Main {
 
     }
 
-    public static void Print(char x, char y) throws InterruptedException {
+    public static void xyPrint(char x, char y) throws InterruptedException {
         int i = 0;
         while (i < COUNT_TIMESTAMP) {
             synchronized (key) {
