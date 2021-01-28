@@ -41,6 +41,10 @@ class Lesson6MainTest {
     void getValuesAfterLastFourWaitException() {
         int[] original = {1, 2, 3, 6, 8};
         Assertions.assertThrows(RuntimeException.class, () -> main.getValuesAfterLastFour(original));
+
+    }
+    @Test
+    void getValuesAfterLastFourWaitException2(){
         int[] empty = {};
         Assertions.assertThrows(RuntimeException.class, () -> main.getValuesAfterLastFour(empty));
     }
