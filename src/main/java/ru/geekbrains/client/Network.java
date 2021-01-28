@@ -18,7 +18,8 @@ public class Network {
     private static Callback callOnCloseConnection;
 
     static {
-        Callback empty = args -> { };
+        Callback empty = args -> {
+        };
         callOnMsgReceived = empty;
         callOnAuthenticated = empty;
         callOnException = empty;

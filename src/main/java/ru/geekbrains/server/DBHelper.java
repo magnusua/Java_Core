@@ -1,6 +1,9 @@
 package ru.geekbrains.server;
 
 import java.sql.*;
+import java.util.logging.Level;
+
+import static ru.geekbrains.server.MainServer.logger;
 
 public class DBHelper implements AutoCloseable {
     private static DBHelper instance;
@@ -28,8 +31,11 @@ public class DBHelper implements AutoCloseable {
             Class.forName("org.sqlite.JDBC");
             connection = DriverManager.getConnection(urlConnectionDatabase);
             prepareAllStatements();
+            logger.log(Level.INFO,
+                    "logging: {0} ", "База данных успешно подключена");
         } catch (SQLException | ClassNotFoundException e) {
-            System.err.println("Ошибка открытия базы данных");
+            logger.log(Level.WARNING,
+                    "logging: {0} ", "Ошибка открытия базы данных");
         }
     }
 
@@ -51,7 +57,8 @@ public class DBHelper implements AutoCloseable {
             resultSet.close();
         } catch (SQLException e) {
             e.printStackTrace();
-            System.err.println("Ошибка получения пользователя из базы данных");
+            logger.log(Level.WARNING,
+                    "logging: {0} ", "Ошибка получения пользователя из базы данных");
         }
         return nickName;
     }
@@ -65,7 +72,8 @@ public class DBHelper implements AutoCloseable {
             return true;
         } catch (SQLException e) {
             e.printStackTrace();
-            System.err.println("Ошибка записи нового пользователя в базу данных");
+            logger.log(Level.WARNING,
+                    "logging: {0} ", "Ошибка записи нового пользователя в базу данных");
             return false;
         }
     }
@@ -91,7 +99,8 @@ public class DBHelper implements AutoCloseable {
             connection.close();
         } catch (SQLException e) {
             e.printStackTrace();
-            System.err.println("Ошибка отключения от базы данных");
+            logger.log(Level.WARNING,
+                    "logging: {0} ", "Ошибка отключения от базы данных");
         }
     }
 }

@@ -6,6 +6,9 @@ import java.net.Socket;
 import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Level;
+
+import static ru.geekbrains.server.MainServer.logger;
 
 public class Server {
     private Vector<ClientHandler> clients;
@@ -22,17 +25,21 @@ public class Server {
         authService = new SimpleAuthService();
         executorService = Executors.newCachedThreadPool();
         try (ServerSocket serverSocket = new ServerSocket(ServerPortSocket)) {
-            System.out.println("Сервер запущен на порту " + ServerPortSocket);
+            logger.log(Level.INFO,
+                    "logging: {0} ",
+                    "Сервер запущен на порту " + ServerPortSocket);
             while (true) {
                 Socket socket = serverSocket.accept();
                 new ClientHandler(this, socket, authService, executorService);
-                System.out.println("Подключился новый клиент");
+                logger.log(Level.INFO,
+                        "logging: {1} ","Подключился новый клиент");
             }
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
             executorService.shutdown();
-            System.out.println("Сервер завершил свою работу");
+            logger.log(Level.INFO,
+                    "logging: {0} ","Сервер завершил свою работу");
         }
 
     }

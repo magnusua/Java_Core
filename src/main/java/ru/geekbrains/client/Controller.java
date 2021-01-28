@@ -98,7 +98,7 @@ public class Controller implements Initializable {
                     String[] tokens = msg.split("\\s");
                     Platform.runLater(() -> {
                         clientsList.getItems().clear();
-                        for (int i = 1; i < tokens.length; i++){
+                        for (int i = 1; i < tokens.length; i++) {
                             clientsList.getItems().add(tokens[i]);
                         }
                     });
